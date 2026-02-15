@@ -1,4 +1,3 @@
-
 /* --- CONFIGURACIÓN BASE --- */
     html, body { 
       height: 100%; margin: 0; padding: 0; width: 100vw; overflow: hidden; 
@@ -9,41 +8,10 @@
       touch-action: manipulation; overscroll-behavior: none;
       user-select: none; -webkit-user-select: none;
     }
-
-    #valentine-book, .paper, #intro-screen, #music-player-overlay {
-    transform: translateZ(0); 
-    will-change: transform, opacity;
+    canvas { 
+        touch-action: none; position: fixed; top:0; left:0; width: 100vw; height: 100vh; 
+        will-change: transform; /* Aceleración GPU */
     }
-
-    canvas {
-    pointer-events: none;
-    }
-
-@media (max-width: 992px) {
-    .modal-content, 
-    #music-player-overlay, 
-    #mini-player, 
-    .envelope, 
-    .gift-card, 
-    #time-counter, 
-    .toast-msg,
-    .lyrics-overlay {
-        /* Desactivamos el desenfoque en tiempo real */
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
-        
-        /* Compensamos con un fondo un poco más oscuro para mantener legibilidad */
-        background: rgba(15, 20, 28, 0.98) !important;
-        
-        /* Simplificamos sombras */
-        box-shadow: 0 4px 15px rgba(0,0,0,0.5) !important;
-    }
-
-    /* El libro 3D consume mucha memoria, simplificamos las sombras internas */
-    .front, .back {
-        box-shadow: none !important;
-    }
-}
     
     #trail-canvas { pointer-events: none; z-index: 9999; opacity: 0.8; mix-blend-mode: screen; }
     *, *:before, *:after { box-sizing: inherit; }
@@ -66,7 +34,7 @@
         position: fixed; top: -15vh; left: -15vw; width: 130vw; height: 130vh; 
         transform: translate3d(0,0,0); will-change: transform; pointer-events: none;
     }
-    #aurora-bg { width: 100%; height: 100%; z-index: 0; opacity: 0.5; transition: opacity 1.5s ease; mix-blend-mode: screen; filter: blur(40px); will-change: opacity; }
+    #aurora-bg { width: 100%; height: 100%; z-index: 0; opacity: 0; transition: opacity 1.5s ease; mix-blend-mode: screen; filter: blur(40px); will-change: opacity; }
     #stars-bg { width: 100%; height: 100%; pointer-events: auto; z-index: 1; }
     .blob-container { z-index: 2; }
     .blob { position: absolute; border-radius: 50%; opacity: 0.15; filter: blur(80px); will-change: transform; transform: translateZ(0);}
@@ -444,20 +412,18 @@
 /* ESTADO OPEN (Libro abierto leyendo) */
 #valentine-book.open {
     /* Se desplaza para que las páginas abiertas queden centradas */
-    opacity: 0.5;
     transform: translate(0%, -50%) rotateX(5deg);
 }
 
 /* --- HOJAS DEL LIBRO (PAPER) - FÍSICA REALISTA --- */
 .paper {
-    will-change: transform;
     position: absolute;
     width: 100%; height: 100%;
     top: 0; left: 0;
     transform-origin: left; /* Giran desde el lomo */
     transform-style: preserve-3d;
     /* Curva de velocidad para un movimiento de papel natural */
-    transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+    transition: transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1);
 }
 
 /* CLASE PARA GIRAR LA HOJA */
@@ -491,7 +457,7 @@
     background-color: #08080a !important; 
     background: linear-gradient(to right, #08080a, #1a1a1d, #08080a) !important;
     border: 1px solid #30D5C8;
-    box-shadow: inset 0 0 10px rgba(0,0,0,0.5) !important;
+    box-shadow: inset 0 0 40px rgba(0,0,0,0.9);
 
     /* 3. ANTI-GLITCH (Crucial para que las letras no parpadeen) */
     -webkit-backface-visibility: hidden;

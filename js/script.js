@@ -1,9 +1,8 @@
-
 // EVITAR ZOOM Y GESTOS NO DESEADOS
 document.addEventListener('dblclick', function(event) { event.preventDefault(); }, { passive: false });
 document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
 const isMobile = window.innerWidth < 768;
-let lastSparkTime = 0;
+
 const paperSound = new Audio('assets/pagina.mp3'); // Ruta de tu sonido
 paperSound.volume = 0.6;
 
@@ -94,11 +93,12 @@ function updateParallax() {
 }
 updateParallax(); 
 /* --- OPTIMIZACIÓN: CURSOR MÁGICO LIGERO --- */
+let lastSparkTime = 0;
 
 document.addEventListener('mousemove', function(e) {
     const now = Date.now();
     // LIMITADOR: Solo crea una chispa cada 50ms (20 veces por seg, no 1000)
-    if (now - lastSparkTime < 40) return; 
+    if (now - lastSparkTime < 50) return; 
     
     lastSparkTime = now;
 
@@ -172,26 +172,15 @@ function typeWriter() { if (charIndex < titleText.length) { titleElement.innerHT
 
 // FONDOS
 const fadeOverlay = document.getElementById('fadeoverlay'), aurora = document.getElementById('aurora-bg'), ctxAurora = aurora.getContext('2d', {alpha: true}), canvas = document.getElementById('stars-bg'), ctx = canvas.getContext('2d', {alpha: true});
-function resizeBGs() { 
-    // TRUCO: Renderizamos a la mitad (0.5). El CSS lo estira.
-    // Se ve igual de borroso (es una aurora) pero corre al DOBLE de velocidad.
-    aurora.width = window.innerWidth * 0.5; 
-    aurora.height = window.innerHeight * 0.5; 
-    canvas.width = window.innerWidth; 
-    canvas.height = window.innerHeight; 
-}
+function resizeBGs() { aurora.width = (window.innerWidth * 1.3) / 2; aurora.height = (window.innerHeight * 1.3) / 2; canvas.width = window.innerWidth * 1.3; canvas.height = window.innerHeight * 1.3; }
+resizeBGs(); window.addEventListener('resize', resizeBGs, {passive: true});
 
 let auroraActive = false, auroraFrameId = null;
 function drawAurora(ts=0) {
   if (!auroraActive) {ctxAurora.clearRect(0,0,aurora.width,aurora.height);return;}
   const w = aurora.width, h = aurora.height; ctxAurora.clearRect(0,0,w,h);
-  
-  // OPTIMIZACIÓN: Aumentamos el step de 15 a 30.
-  // Menos iteraciones = Más FPS.
-  const step = 40; 
-  
-  // ... (el resto de la función sigue igual)
   const layers = [{ color: 'rgba(0, 255, 200, 0.4)', amp: h*0.2, ybase: h*0.5, freq: 0.003, speed: .08}, { color: 'rgba(160, 32, 240, 0.35)', amp: h*0.15, ybase: h*0.6, freq: 0.002, speed: .06}, { color: 'rgba(50, 205, 50, 0.3)', amp: h*0.25, ybase: h*0.45, freq: 0.001, speed: .04}];
+  const step = 15; 
   for (let k=0;k<layers.length;k++) {
     const {color, amp, ybase, freq, speed} = layers[k]; ctxAurora.beginPath(); ctxAurora.moveTo(0, h);
     const tBase = ts*speed + 600*k;
@@ -203,55 +192,26 @@ function drawAurora(ts=0) {
 function activarAurora(){ auroraActive = true; aurora.style.opacity = "0.7"; drawAurora(); }
 function desactivarAurora(){ if(auroraFrameId) cancelAnimationFrame(auroraFrameId); aurora.style.opacity = "0"; auroraActive=false; setTimeout(()=>{ctxAurora.clearRect(0,0,aurora.width,aurora.height);}, 1500);}
 
-// --- SISTEMA DE PAUSA INTELIGENTE ---
-let isFlipping = false; // Bandera para saber si estamos pasando página
-
-function pauseBackgrounds() {
-    isFlipping = true;
-    // Detenemos la aurora
-    if(auroraFrameId) cancelAnimationFrame(auroraFrameId);
-    // Detenemos las estrellas
-    if(animUniverseId) cancelAnimationFrame(animUniverseId);
-}
-
-function resumeBackgrounds() {
-    isFlipping = false;
-    // Reactivamos aurora si corresponde
-    if(auroraActive) drawAurora();
-    // Reactivamos estrellas si estamos en modo universo
-    if(universeMode) animStars(); 
-    // Si NO estamos en modo universo (estamos leyendo), reactivamos estrellas normales
-    if(!universeMode) animStars(); 
-}
-
 let universeMode = false, animUniverseId = null;
 let stars=[], STAR_N=isMobile?40:88;
 let universeStars = [], shooterQueue = [], flairCloud = [], dustCloud = [], lastSuperstar = 0, ripples = [], flashStars = [];
 function resetStars(n=STAR_N){ stars=[]; for(let i=0;i<n;i++){stars.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height,r: Math.random()*1.09+0.49,phase: Math.random()*Math.PI*2,s: Math.random()*0.14+0.07,sway: Math.random()*0.6+0.5});} }
 resetStars();
 function animStars(ts=0){
-  // SI ESTAMOS PASANDO PÁGINA, NO DIBUJES NADA (Ahorro total de CPU)
-  if(isFlipping) return; 
-  if(universeMode) return;
-
-  // ... (Tu código de dibujo de estrellas optimizado aquí) ...
-  // Te recomiendo usar este Bucle Optimizado (Batch Rendering):
-  
+  if(universeMode)return;
   ctx.clearRect(0,0,canvas.width,canvas.height);
-  // Fondo simple
-  ctx.fillStyle = '#0a1014'; 
-  ctx.fillRect(0,0,canvas.width,canvas.height);
-
-  ctx.beginPath();
-  ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+  let grad = ctx.createRadialGradient(canvas.width/2,canvas.height/2,canvas.height/13,canvas.width/2,canvas.height/2,canvas.height*0.9);
+  grad.addColorStop(0,'rgba(48,213,200,.09)'); grad.addColorStop(1,'#0a1014');
+  ctx.fillStyle=grad; ctx.fillRect(0,0,canvas.width,canvas.height);
+  const timeScale = ts/1370;
   for(let s of stars){
-      ctx.moveTo(s.x, s.y);
-      ctx.arc(s.x, s.y, s.r, 0, 2*Math.PI);
+    let a = 0.74 + Math.sin(timeScale + s.phase)*0.15;
+    ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,2*Math.PI); ctx.fillStyle = 'rgba(225,234,255,'+(a*0.3)+')'; ctx.fill(); 
+    ctx.beginPath(); ctx.arc(s.x,s.y,s.r*0.6,0,2*Math.PI); ctx.fillStyle = '#fff'; ctx.fill();
   }
-  ctx.fill();
-
   requestAnimationFrame(animStars);
 }
+animStars();
 
 const NUM_STARS = isMobile ? 180 : 400; const ORBITS = [32, 65, 90, 150, 120, 200, 260];
 function genStarU() { let r = 0.4+Math.random()*1.3, hue = 210+Math.random()*80; let oRad = ORBITS[Math.floor(Math.random()*ORBITS.length)] + Math.random()*18; let oAng = Math.random()*2*Math.PI; return {bx: Math.random()*canvas.width, by: Math.random()*canvas.height, r,orbitRad: oRad, baseAngle: oAng,drift: Math.random()*2*Math.PI,speed: 0.00022+Math.random()*0.00045,glow: 7+r*6,phase: Math.random()*7, color: `hsla(${hue},74%,85%,.82)`, extraGlow: 0}; }
@@ -266,7 +226,7 @@ const songs = [
   {
     title: "La passion (Ext.)", artist: "Gigi D'Agostino", src: "assets/La Passion.mp3", cover: "assets/1.jpg", 
     lyrics: "Baby, I love you so, and never let you go\nI'm looking for your face, waiting for warm embrace\nI'm living in the space, I'm following your trace\nTell me what's going on, tell me what's going on\nI'm gonna make you queen, girl, have you ever seen?\nOh baby, come to me\nBaby, just come to me\nDon't break my heart tonight, swinging my soul desire\nBaby, just come to me, be what you wanna be\nUsing your fantasy, I need your soul to see\nBaby, just come to me, now we can do it right\nHolding each other tight, now we can make it right\nI promise you delight, waiting until daylight\nI gotta have the key, to open your heart to me\nNow I can set you free, be what you wanna be\nDon't wanna live alone, I gotta be so strong\nDon't wanna be alone\nBaby, I love you so, and never let you go\nI'm looking for your face, waiting for warm embrace\nI'm living in the space, I'm following your trace\nTell me what's going on, tell me what's going on\nI'm gonna make you queen, girl, have you ever seen?\nOh baby, come to me\nBaby, just come to me\nDon't break my heart tonight, swinging my soul desire\nBaby, just come to me, be what you wanna be\nUsing your fantasy, I need your soul to see\nBaby, just come to me, now we can do it right\nHolding each other tight, now we can make it right\nI promise you delight, waiting until daylight\nI gotta have the key, to open your heart to me\nNow I can set you free, be what you wanna be\nDon't wanna live alone, I gotta be so strong\nDon't wanna be alone\nBaby, I love you so, and never let you go\nI'm looking for your face, waiting for warm embrace\nI'm living in the space, I'm following your trace\nTell me what's going on, tell me what's going on\nI'm gonna make you queen, girl, have you ever seen?\nOh baby, come to me\nBaby, just come to me\nDon't break my heart tonight, swinging my soul desire\nBaby, just come to me, be what you wanna be\nUsing your fantasy, I need your soul to see\nBaby, just come to me\nI never think you wanna, we won't belong\nI can see your face too strong\nI sing you anything, you'll be wide on mind\nDon't you ever satisfy my soul in any by my side\nI'm not laughing, I'm not crying\nDon't you go\nBaby, I love you so, and never let you go\nI'm looking for your face, waiting for warm embrace\nI'm living in the space, I'm following your trace\nTell me what's going on, tell me what's going on\nI'm gonna make you queen, girl, have you ever seen?\nOh baby, come to me\nBaby, just come to me\nDon't break my heart tonight, swinging my soul desire\nBaby, just come to me, be what you wanna be\nUsing your fantasy, I need your soul to see\nBaby, just come to me\nI never think you wanna, we won't belong\nI can see your face too strong\nI sing you anything, you'll be wide on mind\nDon't you ever satisfy my soul in any by my side\nI'm not laughing, I'm not crying\nDon't you go\nBaby, I love you so, and never let you go\nI'm looking for your face, waiting for warm embrace\nI'm living in the space, I'm following your trace\nTell me what's going on, tell me what's going on\nI'm gonna make you queen, girl, have you ever seen?\nOh baby, come to me\nBaby, just come to me\nDon't break my heart tonight, swinging my soul desire\nBaby, just come to me, be what you wanna be\nUsing your fantasy, I need your soul to see\nBaby, just come to me\nI never think you wanna, we won't belong\nI can see your face too strong\nI sing you anything, you'll be wide on mind\nDon't you ever satisfy my soul in any by my side\nI'm not laughing, I'm not crying\nDon't you go\nBaby, I love you so, and never let you go\nI'm looking for your face, waiting for warm embrace\nI'm living in the space, I'm following your trace\nTell me what's going on, tell me what's going on\nI'm gonna make you queen, girl, have you ever seen?\nOh baby, come to me (to me, to me, to me)\nTo me (to me, to me, to me)\nTo me (to me, to me, to me)\nI never think you wanna, we won't belong\nI can see your face too strong\nI sing you anything, you'll be wide on mind\nDon't you ever satisfy my soul in any by my side\nI'm not laughing, I'm not crying\nDon't you go\nBaby, I love you so, and never let you go\nI'm looking for your face, waiting for warm embrace\nI'm living in the space, I'm following your trace\nTell me what's going on, tell me what's going on\nI'm gonna make you queen, girl, have you ever seen?\nOh baby, come to me",
-    translation: "Cariño, te amo tanto y nunca te dejaré ir\nEstoy buscando tu rostro, esperando un cálido abrazo.\nEstoy viviendo en el espacio, estoy siguiendo tu rastro.\nDime que esta pasando, dime que esta pasando\nVoy a hacerte reina, niña, ¿lo has visto alguna vez?\nOh nena, ven a mí\nBebé, sólo ven a mí\nNo rompas mi corazón esta noche, balanceando el deseo de mi alma\nBebé, sólo ven a mí, sé lo que quieres ser\nUsando tu fantasía, necesito que tu alma vea\nCariño, solo ven a mí, ahora podemos hacerlo bien.\nAbrazándonos fuerte, ahora podemos hacerlo bien\nTe prometo deleite, esperando hasta el amanecer.\nTengo que tener la llave para abrirme tu corazón.\nAhora puedo liberarte, ser lo que quieras ser\nNo quiero vivir solo, tengo que ser tan fuerte\nNo quiero estar solo\nCariño, te amo tanto y nunca te dejaré ir\nEstoy buscando tu cara, esperando un cálido abrazo.\nEstoy viviendo en el espacio, estoy siguiendo tu rastro.\nDime que esta pasando, dime que esta pasando\nVoy a hacerte reina, niña, ¿lo has visto alguna vez?\nOh nena, ven a mí\nBebé, sólo ven a mí\nNo rompas mi corazón esta noche, balanceando el deseo de mi alma\nBebé, sólo ven a mí, sé lo que quieres ser\nUsando tu fantasía, necesito que tu alma vea\nCariño, solo ven a mí, ahora podemos hacerlo bien.\nAbrazándonos fuerte, ahora podemos hacerlo bien\nTe prometo deleite, esperando hasta el amanecer.\nTengo que tener la llave para abrirme tu corazón.\nAhora puedo liberarte, ser lo que quieras ser\nNo quiero vivir solo, tengo que ser tan fuerte\nNo quiero estar solo\nCariño, te amo tanto y nunca te dejaré ir\nEstoy buscando tu rostro, esperando un cálido abrazo.\nEstoy viviendo en el espacio, estoy siguiendo tu rastro.\nDime que esta pasando, dime que esta pasando\nVoy a hacerte reina, niña, ¿lo has visto alguna vez?\nOh nena, ven a mí\nBebé, sólo ven a mí\nNo rompas mi corazón esta noche, balanceando el deseo de mi alma\nBebé, sólo ven a mí, sé lo que quieres ser\nUsando tu fantasía, necesito que tu alma vea\nBebé, sólo ven a mí\nNunca creo que quieras, no perteneceremos\nPuedo ver tu cara demasiado fuerte\nTe canto cualquier cosa, tendrás amplia mente\nNunca satisfagas mi alma en ninguno a mi lado.\nNo me estoy riendo, no estoy llorando\nno te vayas\nCariño, te amo tanto y nunca te dejaré ir\nEstoy buscando tu cara, esperando un cálido abrazo.\nEstoy viviendo en el espacio, estoy siguiendo tu rastro.\nDime que esta pasando, dime que esta pasando\nVoy a hacerte reina, niña, ¿lo has visto alguna vez?\nOh nena, ven a mí\nBebé, sólo ven a mí\nNo rompas mi corazón esta noche, balanceando el deseo de mi alma\nBebé, sólo ven a mí, sé lo que quieres ser\nUsando tu fantasía, necesito que tu alma vea\nBebé, sólo ven a mí\nNunca creo que quieras, no perteneceremos\nPuedo ver tu cara demasiado fuerte\nTe canto cualquier cosa, tendrás amplia mente\nNunca satisfagas mi alma en ninguno a mi lado.\nNo me estoy riendo, no estoy llorando\nno te vayas\nCariño, te amo tanto y nunca te dejaré ir\nEstoy buscando tu cara, esperando un cálido abrazo.\nEstoy viviendo en el espacio, estoy siguiendo tu rastro.\nDime que esta pasando, dime que esta pasando\nVoy a hacerte reina, niña, ¿lo has visto alguna vez?\nOh nena, ven a mí\nBebé, sólo ven a mí\nNo rompas mi corazón esta noche, balanceando el deseo de mi alma\nBebé, sólo ven a mí, sé lo que quieres ser\nUsando tu fantasía, necesito que tu alma vea\nBebé, sólo ven a mí\nNunca creo que quieras, no perteneceremos\nPuedo ver tu cara demasiado fuerte\nTe canto cualquier cosa, tendrás amplia mente\nNunca satisfagas mi alma en ninguno a mi lado.\nNo me estoy riendo, no estoy llorando\nno te vayas\nCariño, te amo tanto y nunca te dejaré ir\nEstoy buscando tu rostro, esperando un cálido abrazo.\nEstoy viviendo en el espacio, estoy siguiendo tu rastro.\nDime que esta pasando, dime que esta pasando\nVoy a hacerte reina, niña, ¿lo has visto alguna vez?\nOh nena, ven a mí (a mí, a mí, a mí)\nA mí (a mí, a mí, a mí)\nA mí (a mí, a mí, a mí)\nNunca creo que quieras, no perteneceremos\nPuedo ver tu cara demasiado fuerte\nTe canto cualquier cosa, tendrás amplia mente\nNunca satisfagas mi alma en ninguno a mi lado.\nNo me estoy riendo, no estoy llorando\nno te vayas\nCariño, te amo tanto y nunca te dejaré ir\nEstoy buscando tu rostro, esperando un cálido abrazo.\nEstoy viviendo en el espacio, estoy siguiendo tu rastro.\nDime que esta pasando, dime que esta pasando\nVoy a hacerte reina, niña, ¿lo has visto alguna vez?\nOh nena, ven a mí"
+    translation: "Cariño, te amo tanto y nunca te dejaré ir\nEstoy buscando tu rostro, esperando un cálido abrazo.\nEstoy viviendo en el espacio, estoy siguiendo tu rastro.\nDime que esta pasando, dime que esta pasando\nVoy a hacerte reina, niña, ¿lo has visto alguna vez?\nOh nena, ven a mí\nBebé, sólo ven a mí\nNo rompas mi corazón esta noche, balanceando el deseo de mi alma\nBebé, sólo ven a mí, sé lo que quieres ser\nUsando tu fantasía, necesito que tu alma vea\nCariño, solo ven a mí, ahora podemos hacerlo bien.\nAbrazándonos fuerte, ahora podemos hacerlo bien\nTe prometo deleite, esperando hasta el amanecer.\nTengo que tener la llave para abrirme tu corazón.\nAhora puedo liberarte, ser lo que quieras ser\nNo quiero vivir solo, tengo que ser tan fuerte\nNo quiero estar solo\nCariño, te amo tanto y nunca te dejaré ir\nEstoy buscando tu cara, esperando un cálido abrazo.\nEstoy viviendo en el espacio, estoy siguiendo tu rastro.\nDime que esta pasando, dime que esta pasando\nVoy a hacerte reina, niña, ¿lo has visto alguna vez?\nOh nena, ven a mí\nBebé, sólo ven a mí\nNo rompas mi corazón esta noche, balanceando el deseo de mi alma\nBebé, sólo ven a mí, sé lo que quieres ser\nUsando tu fantasía, necesito que tu alma vea\nBebé, sólo ven a mí\nNunca creo que quieras, no perteneceremos\nPuedo ver tu cara demasiado fuerte\nTe canto cualquier cosa, tendrás amplia mente\nNunca satisfagas mi alma en ninguno a mi lado.\nNo me estoy riendo, no estoy llorando\nno te vayas\nCariño, te amo tanto y nunca te dejaré ir\nEstoy buscando tu cara, esperando un cálido abrazo.\nEstoy viviendo en el espacio, estoy siguiendo tu rastro.\nDime que esta pasando, dime que esta pasando\nVoy a hacerte reina, niña, ¿lo has visto alguna vez?\nOh nena, ven a mí\nBebé, sólo ven a mí\nNo rompas mi corazón esta noche, balanceando el deseo de mi alma\nBebé, sólo ven a mí, sé lo que quieres ser\nUsando tu fantasía, necesito que tu alma vea\nBebé, sólo ven a mí\nNunca creo que quieras, no perteneceremos\nPuedo ver tu cara demasiado fuerte\nTe canto cualquier cosa, tendrás amplia mente\nNunca satisfagas mi alma en ninguno a mi lado.\nNo me estoy riendo, no estoy llorando\nno te vayas\nCariño, te amo tanto y nunca te dejaré ir\nEstoy buscando tu cara, esperando un cálido abrazo.\nEstoy viviendo en el espacio, estoy siguiendo tu rastro.\nDime que esta pasando, dime que esta pasando\nVoy a hacerte reina, niña, ¿lo has visto alguna vez?\nOh nena, ven a mí\nBebé, sólo ven a mí\nNo rompas mi corazón esta noche, balanceando el deseo de mi alma\nBebé, sólo ven a mí, sé lo que quieres ser\nUsando tu fantasía, necesito que tu alma vea\nBebé, sólo ven a mí\nNunca creo que quieras, no perteneceremos\nPuedo ver tu cara demasiado fuerte\nTe canto cualquier cosa, tendrás amplia mente\nNunca satisfagas mi alma en ninguno a mi lado.\nNo me estoy riendo, no estoy llorando\nno te vayas\nCariño, te amo tanto y nunca te dejaré ir\nEstoy buscando tu rostro, esperando un cálido abrazo.\nEstoy viviendo en el espacio, estoy siguiendo tu rastro.\nDime que esta pasando, dime que esta pasando\nVoy a hacerte reina, niña, ¿lo has visto alguna vez?\nOh nena, ven a mí (a mí, a mí, a mí)\nA mí (a mí, a mí, a mí)\nA mí (a mí, a mí, a mí)\nNunca creo que quieras, no perteneceremos\nPuedo ver tu cara demasiado fuerte\nTe canto cualquier cosa, tendrás amplia mente\nNunca satisfagas mi alma en ninguno a mi lado.\nNo me estoy riendo, no estoy llorando\nno te vayas\nCariño, te amo tanto y nunca te dejaré ir\nEstoy buscando tu rostro, esperando un cálido abrazo.\nEstoy viviendo en el espacio, estoy siguiendo tu rastro.\nDime que esta pasando, dime que esta pasando\nVoy a hacerte reina, niña, ¿lo has visto alguna vez?\nOh nena, ven a mí"
   },
   {
     title: "Never have enough", artist: "Los Retros", src: "assets/Los Retros - Never Have Enough.mp3", cover: "assets/2.jpg",
@@ -740,58 +700,50 @@ function cerrarLibro() {
 
 function goNextPage() {
     if (currentLocation < maxLocation) {
-        // 1. PAUSA TODO LO DEMÁS
-        pauseBackgrounds();
-
         const paper = papers[currentLocation - 1];
-        paperSound.currentTime = 0; paperSound.play();
+
+        paperSound.currentTime = 0; // Reinicia el audio por si le da click rápido
+        paperSound.play(); 
         
         paper.classList.add('flipped');
         
-        // El cambio de Z-Index ocurre a la mitad de la animación
-        setTimeout(() => { 
+        setTimeout(() => {
             paper.style.zIndex = currentLocation; 
-        }, 400); // Ajustado a la mitad de 0.8s
+        }, 500);
 
-        if (currentLocation === 1) book.classList.add('open');
-        
-        // Si llegamos al final, activamos pétalos
+        if (currentLocation === 1) {
+            book.classList.add('open');
+        }
+
+        // === FIX: ACTIVAR FLORES SOLO UNA VEZ ===
+        // Si llegamos a la penúltima hoja (para mostrar la última)
         if (currentLocation === 7 && !petalInterval) { 
+            console.log("Activando lluvia de pétalos...");
             petalInterval = setInterval(crearPetalo, 300);
         }
         
         currentLocation++;
-
-        // 2. REANUDAR FONDO CUANDO TERMINE LA ANIMACIÓN (800ms después)
-        setTimeout(() => {
-            resumeBackgrounds();
-        }, 800);
     }
 }
 
 function goPrevPage() {
     if (currentLocation > 1) {
-        // 1. PAUSA TODO
-        pauseBackgrounds();
-
         const paper = papers[currentLocation - 2];
         const indexDelPapel = currentLocation - 2;
-        paperSound.currentTime = 0; paperSound.play();
+        paperSound.currentTime = 0; // Reinicia el audio por si le da click rápido
+        paperSound.play();
 
         paper.classList.remove('flipped');
         
-        setTimeout(() => { 
+        setTimeout(() => {
             paper.style.zIndex = numOfPapers - indexDelPapel + 1; 
-        }, 400);
+        }, 500);
 
-        if (currentLocation === 2) book.classList.remove('open');
+        if (currentLocation === 2) {
+            book.classList.remove('open');
+        }
         
         currentLocation--;
-
-        // 2. REANUDAR
-        setTimeout(() => {
-            resumeBackgrounds();
-        }, 800);
     }
 }
 
