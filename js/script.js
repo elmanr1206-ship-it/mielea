@@ -173,12 +173,10 @@ function typeWriter() { if (charIndex < titleText.length) { titleElement.innerHT
 // FONDOS
 const fadeOverlay = document.getElementById('fadeoverlay'), aurora = document.getElementById('aurora-bg'), ctxAurora = aurora.getContext('2d', {alpha: true}), canvas = document.getElementById('stars-bg'), ctx = canvas.getContext('2d', {alpha: true});
 function resizeBGs() { 
-    // OPTIMIZACIÓN: Renderizamos la aurora a mitad de resolución.
-    // Como es borrosa, no se nota la diferencia, pero es el doble de rápida.
-    aurora.width = window.innerWidth / 2; 
-    aurora.height = window.innerHeight / 2; 
-    
-    // Las estrellas SÍ se quedan en full resolución para que se vean nítidas
+    // TRUCO: Renderizamos a la mitad (0.5). El CSS lo estira.
+    // Se ve igual de borroso (es una aurora) pero corre al DOBLE de velocidad.
+    aurora.width = window.innerWidth * 0.5; 
+    aurora.height = window.innerHeight * 0.5; 
     canvas.width = window.innerWidth; 
     canvas.height = window.innerHeight; 
 }
@@ -190,7 +188,7 @@ function drawAurora(ts=0) {
   
   // OPTIMIZACIÓN: Aumentamos el step de 15 a 30.
   // Menos iteraciones = Más FPS.
-  const step = 30; 
+  const step = 40; 
   
   // ... (el resto de la función sigue igual)
   const layers = [{ color: 'rgba(0, 255, 200, 0.4)', amp: h*0.2, ybase: h*0.5, freq: 0.003, speed: .08}, { color: 'rgba(160, 32, 240, 0.35)', amp: h*0.15, ybase: h*0.6, freq: 0.002, speed: .06}, { color: 'rgba(50, 205, 50, 0.3)', amp: h*0.25, ybase: h*0.45, freq: 0.001, speed: .04}];
@@ -205,45 +203,52 @@ function drawAurora(ts=0) {
 function activarAurora(){ auroraActive = true; aurora.style.opacity = "0.7"; drawAurora(); }
 function desactivarAurora(){ if(auroraFrameId) cancelAnimationFrame(auroraFrameId); aurora.style.opacity = "0"; auroraActive=false; setTimeout(()=>{ctxAurora.clearRect(0,0,aurora.width,aurora.height);}, 1500);}
 
+// --- SISTEMA DE PAUSA INTELIGENTE ---
+let isFlipping = false; // Bandera para saber si estamos pasando página
+
+function pauseBackgrounds() {
+    isFlipping = true;
+    // Detenemos la aurora
+    if(auroraFrameId) cancelAnimationFrame(auroraFrameId);
+    // Detenemos las estrellas
+    if(animUniverseId) cancelAnimationFrame(animUniverseId);
+}
+
+function resumeBackgrounds() {
+    isFlipping = false;
+    // Reactivamos aurora si corresponde
+    if(auroraActive) drawAurora();
+    // Reactivamos estrellas si estamos en modo universo
+    if(universeMode) animStars(); 
+    // Si NO estamos en modo universo (estamos leyendo), reactivamos estrellas normales
+    if(!universeMode) animStars(); 
+}
+
 let universeMode = false, animUniverseId = null;
 let stars=[], STAR_N=isMobile?40:88;
 let universeStars = [], shooterQueue = [], flairCloud = [], dustCloud = [], lastSuperstar = 0, ripples = [], flashStars = [];
 function resetStars(n=STAR_N){ stars=[]; for(let i=0;i<n;i++){stars.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height,r: Math.random()*1.09+0.49,phase: Math.random()*Math.PI*2,s: Math.random()*0.14+0.07,sway: Math.random()*0.6+0.5});} }
 resetStars();
 function animStars(ts=0){
-  if(universeMode)return;
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  
-  // 1. Fondo (Rápido)
-  let grad = ctx.createRadialGradient(canvas.width/2,canvas.height/2,canvas.height/13,canvas.width/2,canvas.height/2,canvas.height*0.9);
-  grad.addColorStop(0,'rgba(48,213,200,.09)'); grad.addColorStop(1,'#0a1014');
-  ctx.fillStyle=grad; ctx.fillRect(0,0,canvas.width,canvas.height);
-  
-  const timeScale = ts/1370;
-  
-  // 2. OPTIMIZACIÓN: Batch Rendering (Dibujar todo junto)
-  ctx.beginPath(); // Abrimos camino UNA sola vez
-  ctx.fillStyle = '#fff'; // Color base
-  
-  for(let s of stars){
-    // Cálculos de movimiento
-    // (Opcional: Si quieres recuperar el parpadeo individual, esta técnica lo simplifica a blanco)
-    // Pero para rendimiento extremo, pintar todo de blanco con alpha variable es complejo.
-    // Mantenemos tu lógica visual simplificada:
-    
-    let a = 0.74 + Math.sin(timeScale + s.phase)*0.15; // Tu cálculo de brillo original
-    
-    // Truco: Dibujamos el núcleo blanco.
-    ctx.moveTo(s.x, s.y);
-    ctx.arc(s.x, s.y, s.r*0.8, 0, 2*Math.PI); 
-  }
-  
-  // Rellenamos TODAS las estrellas al mismo tiempo
-  ctx.fillStyle = "rgba(255, 255, 255, 0.8)"; 
-  ctx.fill();
+  // SI ESTAMOS PASANDO PÁGINA, NO DIBUJES NADA (Ahorro total de CPU)
+  if(isFlipping) return; 
+  if(universeMode) return;
 
-  // Si quieres recuperar el "halo" azulado (que es costoso), haz otro loop aquí.
-  // Pero te recomiendo dejar solo los núcleos blancos para máxima velocidad.
+  // ... (Tu código de dibujo de estrellas optimizado aquí) ...
+  // Te recomiendo usar este Bucle Optimizado (Batch Rendering):
+  
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  // Fondo simple
+  ctx.fillStyle = '#0a1014'; 
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  ctx.beginPath();
+  ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+  for(let s of stars){
+      ctx.moveTo(s.x, s.y);
+      ctx.arc(s.x, s.y, s.r, 0, 2*Math.PI);
+  }
+  ctx.fill();
 
   requestAnimationFrame(animStars);
 }
@@ -735,50 +740,58 @@ function cerrarLibro() {
 
 function goNextPage() {
     if (currentLocation < maxLocation) {
-        const paper = papers[currentLocation - 1];
+        // 1. PAUSA TODO LO DEMÁS
+        pauseBackgrounds();
 
-        paperSound.currentTime = 0; // Reinicia el audio por si le da click rápido
-        paperSound.play(); 
+        const paper = papers[currentLocation - 1];
+        paperSound.currentTime = 0; paperSound.play();
         
         paper.classList.add('flipped');
         
-        setTimeout(() => {
+        // El cambio de Z-Index ocurre a la mitad de la animación
+        setTimeout(() => { 
             paper.style.zIndex = currentLocation; 
-        }, 500);
+        }, 400); // Ajustado a la mitad de 0.8s
 
-        if (currentLocation === 1) {
-            book.classList.add('open');
-        }
-
-        // === FIX: ACTIVAR FLORES SOLO UNA VEZ ===
-        // Si llegamos a la penúltima hoja (para mostrar la última)
+        if (currentLocation === 1) book.classList.add('open');
+        
+        // Si llegamos al final, activamos pétalos
         if (currentLocation === 7 && !petalInterval) { 
-            console.log("Activando lluvia de pétalos...");
             petalInterval = setInterval(crearPetalo, 300);
         }
         
         currentLocation++;
+
+        // 2. REANUDAR FONDO CUANDO TERMINE LA ANIMACIÓN (800ms después)
+        setTimeout(() => {
+            resumeBackgrounds();
+        }, 800);
     }
 }
 
 function goPrevPage() {
     if (currentLocation > 1) {
+        // 1. PAUSA TODO
+        pauseBackgrounds();
+
         const paper = papers[currentLocation - 2];
         const indexDelPapel = currentLocation - 2;
-        paperSound.currentTime = 0; // Reinicia el audio por si le da click rápido
-        paperSound.play();
+        paperSound.currentTime = 0; paperSound.play();
 
         paper.classList.remove('flipped');
         
-        setTimeout(() => {
+        setTimeout(() => { 
             paper.style.zIndex = numOfPapers - indexDelPapel + 1; 
-        }, 500);
+        }, 400);
 
-        if (currentLocation === 2) {
-            book.classList.remove('open');
-        }
+        if (currentLocation === 2) book.classList.remove('open');
         
         currentLocation--;
+
+        // 2. REANUDAR
+        setTimeout(() => {
+            resumeBackgrounds();
+        }, 800);
     }
 }
 
