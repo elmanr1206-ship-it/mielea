@@ -41,7 +41,8 @@
 
     /* El libro 3D consume mucha memoria, simplificamos las sombras internas */
     .front, .back {
-        box-shadow: inset 0 0 15px rgba(0,0,0,0.8) !important;
+        box-shadow: none !important;
+        border: 1px solid #30D5C8;
     }
 }
     
@@ -66,7 +67,7 @@
         position: fixed; top: -15vh; left: -15vw; width: 130vw; height: 130vh; 
         transform: translate3d(0,0,0); will-change: transform; pointer-events: none;
     }
-    #aurora-bg { width: 100%; height: 100%; z-index: 0; opacity: 0; transition: opacity 1.5s ease; mix-blend-mode: screen; filter: blur(40px); will-change: opacity; }
+    #aurora-bg { width: 100%; height: 100%; z-index: 0; opacity: 0.5; transition: opacity 1.5s ease; mix-blend-mode: screen; filter: blur(40px); will-change: opacity; }
     #stars-bg { width: 100%; height: 100%; pointer-events: auto; z-index: 1; }
     .blob-container { z-index: 2; }
     .blob { position: absolute; border-radius: 50%; opacity: 0.15; filter: blur(80px); will-change: transform; transform: translateZ(0);}
@@ -444,18 +445,20 @@
 /* ESTADO OPEN (Libro abierto leyendo) */
 #valentine-book.open {
     /* Se desplaza para que las páginas abiertas queden centradas */
+    opacity: 0.5;
     transform: translate(0%, -50%) rotateX(5deg);
 }
 
 /* --- HOJAS DEL LIBRO (PAPER) - FÍSICA REALISTA --- */
 .paper {
+    will-change: transform;
     position: absolute;
     width: 100%; height: 100%;
     top: 0; left: 0;
     transform-origin: left; /* Giran desde el lomo */
     transform-style: preserve-3d;
     /* Curva de velocidad para un movimiento de papel natural */
-    transition: transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+    transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 /* CLASE PARA GIRAR LA HOJA */
@@ -489,7 +492,7 @@
     background-color: #08080a !important; 
     background: linear-gradient(to right, #08080a, #1a1a1d, #08080a) !important;
     border: 1px solid #30D5C8;
-    box-shadow: inset 0 0 40px rgba(0,0,0,0.9);
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5) !important;
 
     /* 3. ANTI-GLITCH (Crucial para que las letras no parpadeen) */
     -webkit-backface-visibility: hidden;
