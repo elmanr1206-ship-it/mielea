@@ -42,7 +42,6 @@
     /* El libro 3D consume mucha memoria, simplificamos las sombras internas */
     .front, .back {
         box-shadow: none !important;
-        border: 1px solid #30D5C8;
     }
 }
     
