@@ -198,17 +198,33 @@ let universeStars = [], shooterQueue = [], flairCloud = [], dustCloud = [], last
 function resetStars(n=STAR_N){ stars=[]; for(let i=0;i<n;i++){stars.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height,r: Math.random()*1.09+0.49,phase: Math.random()*Math.PI*2,s: Math.random()*0.14+0.07,sway: Math.random()*0.6+0.5});} }
 resetStars();
 function animStars(ts=0){
-  if(universeMode)return;
+  if(universeMode) return; // Si entra al modo universo, esta se detiene
+
+  // Limpiamos el canvas
   ctx.clearRect(0,0,canvas.width,canvas.height);
-  let grad = ctx.createRadialGradient(canvas.width/2,canvas.height/2,canvas.height/13,canvas.width/2,canvas.height/2,canvas.height*0.9);
-  grad.addColorStop(0,'rgba(48,213,200,.09)'); grad.addColorStop(1,'#0a1014');
-  ctx.fillStyle=grad; ctx.fillRect(0,0,canvas.width,canvas.height);
-  const timeScale = ts/1370;
+
+  const timeScale = ts/1000;
+
   for(let s of stars){
-    let a = 0.74 + Math.sin(timeScale + s.phase)*0.15;
-    ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,2*Math.PI); ctx.fillStyle = 'rgba(225,234,255,'+(a*0.3)+')'; ctx.fill(); 
-    ctx.beginPath(); ctx.arc(s.x,s.y,s.r*0.6,0,2*Math.PI); ctx.fillStyle = '#fff'; ctx.fill();
+    // ESTO FALTABA: Calcular el brillo basado en el tiempo (seno)
+    // Hace que parpadeen suavemente entre 0.3 y 1
+    let a = 0.5 + Math.sin(timeScale + s.phase) * 0.5; 
+
+    // Dibujamos la estrella con ese brillo dinámico
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, 2*Math.PI);
+    
+    // Usamos el 'a' (alpha) que calculamos arriba
+    ctx.fillStyle = `rgba(255, 255, 255, ${a})`; 
+    ctx.fill();
+    
+    // (Opcional) Un halo suave extra
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r * 2, 0, 2*Math.PI);
+    ctx.fillStyle = `rgba(225, 234, 255, ${a * 0.15})`;
+    ctx.fill();
   }
+  
   requestAnimationFrame(animStars);
 }
 animStars();
@@ -698,30 +714,32 @@ function cerrarLibro() {
     bookState = 'peeking';
 }
 
+/* EN JS/SCRIPT.JS */
+
 function goNextPage() {
     if (currentLocation < maxLocation) {
         const paper = papers[currentLocation - 1];
+        
+        // Reproducir sonido si lo tienes
+        if(typeof paperSound !== 'undefined') { paperSound.currentTime = 0; paperSound.play(); }
 
-        paperSound.currentTime = 0; // Reinicia el audio por si le da click rápido
-        paperSound.play(); 
-        
         paper.classList.add('flipped');
-        
+
+        // AQUÍ ESTABA EL ERROR: El z-index debe cambiar EXACTAMENTE a la mitad de la animación
+        // Si en CSS pusimos 1.5s (1500ms), aquí debe ser 750ms.
         setTimeout(() => {
-            paper.style.zIndex = currentLocation; 
-        }, 500);
+            paper.style.zIndex = currentLocation;
+        }, 750); 
 
         if (currentLocation === 1) {
             book.classList.add('open');
         }
-
-        // === FIX: ACTIVAR FLORES SOLO UNA VEZ ===
-        // Si llegamos a la penúltima hoja (para mostrar la última)
-        if (currentLocation === 7 && !petalInterval) { 
-            console.log("Activando lluvia de pétalos...");
-            petalInterval = setInterval(crearPetalo, 300);
-        }
         
+        // (Opcional) Si tenías lo de los pétalos en la última hoja
+        if (currentLocation === 7 && typeof petalInterval !== 'undefined' && !petalInterval) {
+             petalInterval = setInterval(crearPetalo, 300);
+        }
+
         currentLocation++;
     }
 }
@@ -729,20 +747,21 @@ function goNextPage() {
 function goPrevPage() {
     if (currentLocation > 1) {
         const paper = papers[currentLocation - 2];
-        const indexDelPapel = currentLocation - 2;
-        paperSound.currentTime = 0; // Reinicia el audio por si le da click rápido
-        paperSound.play();
+        const indexDelPapel = currentLocation - 2; // Corrección de índice
+        
+        if(typeof paperSound !== 'undefined') { paperSound.currentTime = 0; paperSound.play(); }
 
         paper.classList.remove('flipped');
-        
+
+        // IGUAL AQUÍ: 750ms para que no se vea el corte feo
         setTimeout(() => {
-            paper.style.zIndex = numOfPapers - indexDelPapel + 1; 
-        }, 500);
+            paper.style.zIndex = numOfPapers - indexDelPapel + 1;
+        }, 750);
 
         if (currentLocation === 2) {
             book.classList.remove('open');
         }
-        
+
         currentLocation--;
     }
 }
