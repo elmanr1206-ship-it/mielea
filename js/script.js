@@ -3,7 +3,7 @@
 document.addEventListener('dblclick', function(event) { event.preventDefault(); }, { passive: false });
 document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
 const isMobile = window.innerWidth < 768;
-
+let lastSparkTime = 0;
 const paperSound = new Audio('assets/pagina.mp3'); // Ruta de tu sonido
 paperSound.volume = 0.6;
 
@@ -94,12 +94,11 @@ function updateParallax() {
 }
 updateParallax(); 
 /* --- OPTIMIZACIÓN: CURSOR MÁGICO LIGERO --- */
-let lastSparkTime = 0;
 
 document.addEventListener('mousemove', function(e) {
     const now = Date.now();
     // LIMITADOR: Solo crea una chispa cada 50ms (20 veces por seg, no 1000)
-    if (now - lastSparkTime < 50) return; 
+    if (now - lastSparkTime < 40) return; 
     
     lastSparkTime = now;
 
@@ -173,15 +172,28 @@ function typeWriter() { if (charIndex < titleText.length) { titleElement.innerHT
 
 // FONDOS
 const fadeOverlay = document.getElementById('fadeoverlay'), aurora = document.getElementById('aurora-bg'), ctxAurora = aurora.getContext('2d', {alpha: true}), canvas = document.getElementById('stars-bg'), ctx = canvas.getContext('2d', {alpha: true});
-function resizeBGs() { aurora.width = (window.innerWidth * 1.3) / 2; aurora.height = (window.innerHeight * 1.3) / 2; canvas.width = window.innerWidth * 1.3; canvas.height = window.innerHeight * 1.3; }
-resizeBGs(); window.addEventListener('resize', resizeBGs, {passive: true});
+function resizeBGs() { 
+    // OPTIMIZACIÓN: Renderizamos la aurora a mitad de resolución.
+    // Como es borrosa, no se nota la diferencia, pero es el doble de rápida.
+    aurora.width = window.innerWidth / 2; 
+    aurora.height = window.innerHeight / 2; 
+    
+    // Las estrellas SÍ se quedan en full resolución para que se vean nítidas
+    canvas.width = window.innerWidth; 
+    canvas.height = window.innerHeight; 
+}
 
 let auroraActive = false, auroraFrameId = null;
 function drawAurora(ts=0) {
   if (!auroraActive) {ctxAurora.clearRect(0,0,aurora.width,aurora.height);return;}
   const w = aurora.width, h = aurora.height; ctxAurora.clearRect(0,0,w,h);
+  
+  // OPTIMIZACIÓN: Aumentamos el step de 15 a 30.
+  // Menos iteraciones = Más FPS.
+  const step = 30; 
+  
+  // ... (el resto de la función sigue igual)
   const layers = [{ color: 'rgba(0, 255, 200, 0.4)', amp: h*0.2, ybase: h*0.5, freq: 0.003, speed: .08}, { color: 'rgba(160, 32, 240, 0.35)', amp: h*0.15, ybase: h*0.6, freq: 0.002, speed: .06}, { color: 'rgba(50, 205, 50, 0.3)', amp: h*0.25, ybase: h*0.45, freq: 0.001, speed: .04}];
-  const step = 15; 
   for (let k=0;k<layers.length;k++) {
     const {color, amp, ybase, freq, speed} = layers[k]; ctxAurora.beginPath(); ctxAurora.moveTo(0, h);
     const tBase = ts*speed + 600*k;
@@ -201,18 +213,40 @@ resetStars();
 function animStars(ts=0){
   if(universeMode)return;
   ctx.clearRect(0,0,canvas.width,canvas.height);
+  
+  // 1. Fondo (Rápido)
   let grad = ctx.createRadialGradient(canvas.width/2,canvas.height/2,canvas.height/13,canvas.width/2,canvas.height/2,canvas.height*0.9);
   grad.addColorStop(0,'rgba(48,213,200,.09)'); grad.addColorStop(1,'#0a1014');
   ctx.fillStyle=grad; ctx.fillRect(0,0,canvas.width,canvas.height);
+  
   const timeScale = ts/1370;
+  
+  // 2. OPTIMIZACIÓN: Batch Rendering (Dibujar todo junto)
+  ctx.beginPath(); // Abrimos camino UNA sola vez
+  ctx.fillStyle = '#fff'; // Color base
+  
   for(let s of stars){
-    let a = 0.74 + Math.sin(timeScale + s.phase)*0.15;
-    ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,2*Math.PI); ctx.fillStyle = 'rgba(225,234,255,'+(a*0.3)+')'; ctx.fill(); 
-    ctx.beginPath(); ctx.arc(s.x,s.y,s.r*0.6,0,2*Math.PI); ctx.fillStyle = '#fff'; ctx.fill();
+    // Cálculos de movimiento
+    // (Opcional: Si quieres recuperar el parpadeo individual, esta técnica lo simplifica a blanco)
+    // Pero para rendimiento extremo, pintar todo de blanco con alpha variable es complejo.
+    // Mantenemos tu lógica visual simplificada:
+    
+    let a = 0.74 + Math.sin(timeScale + s.phase)*0.15; // Tu cálculo de brillo original
+    
+    // Truco: Dibujamos el núcleo blanco.
+    ctx.moveTo(s.x, s.y);
+    ctx.arc(s.x, s.y, s.r*0.8, 0, 2*Math.PI); 
   }
+  
+  // Rellenamos TODAS las estrellas al mismo tiempo
+  ctx.fillStyle = "rgba(255, 255, 255, 0.8)"; 
+  ctx.fill();
+
+  // Si quieres recuperar el "halo" azulado (que es costoso), haz otro loop aquí.
+  // Pero te recomiendo dejar solo los núcleos blancos para máxima velocidad.
+
   requestAnimationFrame(animStars);
 }
-animStars();
 
 const NUM_STARS = isMobile ? 180 : 400; const ORBITS = [32, 65, 90, 150, 120, 200, 260];
 function genStarU() { let r = 0.4+Math.random()*1.3, hue = 210+Math.random()*80; let oRad = ORBITS[Math.floor(Math.random()*ORBITS.length)] + Math.random()*18; let oAng = Math.random()*2*Math.PI; return {bx: Math.random()*canvas.width, by: Math.random()*canvas.height, r,orbitRad: oRad, baseAngle: oAng,drift: Math.random()*2*Math.PI,speed: 0.00022+Math.random()*0.00045,glow: 7+r*6,phase: Math.random()*7, color: `hsla(${hue},74%,85%,.82)`, extraGlow: 0}; }

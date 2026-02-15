@@ -9,10 +9,41 @@
       touch-action: manipulation; overscroll-behavior: none;
       user-select: none; -webkit-user-select: none;
     }
-    canvas { 
-        touch-action: none; position: fixed; top:0; left:0; width: 100vw; height: 100vh; 
-        will-change: transform; /* Aceleración GPU */
+
+    #valentine-book, .paper, #intro-screen, #music-player-overlay {
+    transform: translateZ(0); 
+    will-change: transform, opacity;
     }
+
+    canvas {
+    pointer-events: none;
+    }
+
+@media (max-width: 992px) {
+    .modal-content, 
+    #music-player-overlay, 
+    #mini-player, 
+    .envelope, 
+    .gift-card, 
+    #time-counter, 
+    .toast-msg,
+    .lyrics-overlay {
+        /* Desactivamos el desenfoque en tiempo real */
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        
+        /* Compensamos con un fondo un poco más oscuro para mantener legibilidad */
+        background: rgba(15, 20, 28, 0.98) !important;
+        
+        /* Simplificamos sombras */
+        box-shadow: 0 4px 15px rgba(0,0,0,0.5) !important;
+    }
+
+    /* El libro 3D consume mucha memoria, simplificamos las sombras internas */
+    .front, .back {
+        box-shadow: inset 0 0 15px rgba(0,0,0,0.8) !important;
+    }
+}
     
     #trail-canvas { pointer-events: none; z-index: 9999; opacity: 0.8; mix-blend-mode: screen; }
     *, *:before, *:after { box-sizing: inherit; }
