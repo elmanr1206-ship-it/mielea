@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <link rel="stylesheet" href="css/styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Espacio atemporal para mi princesa .-.</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>❤️</text></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Pacifico&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Pinyon+Script&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div id="preloader">
+    <div class="loader-heart">❤️</div>
+    <div class="loader-text">TU LUGAR FELIZ .-.</div>
+</div>
+<div id="intro-screen" onclick="abrirRegalo()">
+        <div class="crystal-heart">
+            <div class="heart-shape">❤</div>
+            <div class="pulse-ring"></div>
+        </div>
+        <p class="intro-text-subtle">Toca la pantalla para descubrir...</p>
+</div>
+
+
+<div id="fadeoverlay"></div>
+<canvas id="trail-canvas"></canvas>
+<div class="parallax-layer" id="bg-layer-1"><canvas id="aurora-bg"></canvas></div>
+<div class="parallax-layer" id="bg-layer-2"><canvas id="stars-bg"></canvas></div>
+<div class="blob-container parallax-layer" id="bg-layer-3"><div class="blob blob-1"></div><div class="blob blob-2"></div><div class="blob blob-3"></div></div>
+
+<div id="main-wrapper" class="ui-element">
+  <div id="greeting">Hola veve</div>
+  
+  <h1 class="main-title"><span id="typewriter-title"></span><span class="cursor"></span></h1>
+
+  <div id="time-counter">
+    <span id="counter-text">Calculando nuestro tiempo universo...</span>
+    <span id="heartbeat-text">❤️ Calculando latidos...</span>
+  </div>
+
+  <div class="container" id="cartas-content">
+    <div class="envelope-container">
+      <div class="envelope" data-modal-target="#modal-1"><div class="envelope-title">Ábreme cuando me extrañes</div></div>
+      <div class="envelope" data-modal-target="#modal-2"><div class="envelope-title">Ábreme si tuviste un mal día</div></div>
+      <div class="envelope" data-modal-target="#modal-3"><div class="envelope-title">Ábreme para recordar esto</div></div>
+    </div>
+    
+    <div class="reasons-wrapper">
+      <p id="random-reason">Presiona el botón para saber algo...</p>
+      <button class="btn-glass" onclick="showReason()">💌 ¿Por qué te amo?</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<button id="btn-return-stars" class="ui-element" onclick="goToStars()">✨ Volver a las estrellas</button>
+
+<div class="modal" id="modal-1"><div class="modal-content"><span class="modal-close">&times;</span><h2>Cuando me extrañes...</h2><p>Solo cierra los ojos un segundo e imagina que estoy ahí, dándote los abrazos más sinceros del mundo, todos los abrazos que no te puedo dar ahora, te los pagaré, te lo juro :3. Porque incluso si estamos lejos, siempre pienso y pensaré en ti, siempre estaré disponible para ti, no importa dónde esté, quiero que seas mi princesa consentida.</p><p>Recuerda lo mucho que me gusta todo de ti, Dios eres tan original mi Rafaela.</p><img src="https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExbDg4N2lycHZzcDNnY2FycDN6cjllNHl5Mm94eXIwbXFzOXh2dG02diZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/MfhUoRSp05AxeSIoSW/giphy.gif" loading="lazy"></div></div>
+<div class="modal" id="modal-2"><div class="modal-content"><span class="modal-close">&times;</span><h2>Si tuviste un mal día...</h2><p>Cuéntamelo, aquí estaré para ti siempre, lo que sea que haya pasado, pasará y te volverás mucho más fuerte, sabes lo maravillosa que eres? sabes lo valiente que eres? eres la mejor y eso nadie lo va a cambiar, te amo.</p><p>Mientras tanto, te recuerdo que eres mi persona favorita en todo el universo. Y también, aquí tienes este perrito culiao para que te rías</p><img src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExYnZ3aTVneXpma3RnY2k5dDBvb2tqbGdhY20xaXF4Y3l3ZXRuMngyZSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/B2XS8zQbjbQCAoIBO5/giphy.gif" alt="Perrito culiao" loading="lazy"></div></div>
+<div class="modal" id="modal-3"><div class="modal-content"><span class="modal-close">&times;</span><h2>¿Recuerdas cuanto te amo?</h2><p>Simplemente te convertirás en mi vida, espero que en el futuro, cada vez que abras este mensaje, sientas mi presencia y todo mi amor por ti, eres una persona maravillosa y simplemente quiero recordarte cada vez que pueda, todo el bien que haces en mí, pasó como algo muy casual y eres la mejor casualidad que he podido tener, te adoro con mi alma, no te soltaré, seguiremos juntos siempre, en nuestra travesía pasarán muchas cosas bonitas mi amor, sé que sí, te amo.</p><p>Gracias por querer crear algo verdadero conmigo.</p><img src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExeG44cWNsZWk1dG84cGg0d2lmMWM4emhjZ2RjN2FweTRoeW8xcXE5YiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/obBHEB4pe0VJLMDACz/giphy.gif" alt="Recuerdo bonito" loading="lazy"></div></div>
+
+<div id="finalMsg" class="ui-element">
+  <div style="font-size:1.3em; margin-bottom:15px; color:#30D5C8; font-family:'Pacifico';">¡Tesoros descubiertos!</div>
+  Ya abriste todos los tesoros de nuestro universo 💫<br>
+  <span style="font-size:0.95em; display:block; margin:15px 0; color:#ddd;">¿Miramos juntos las estrellas?</span>
+  <div class="final-btn-container">
+    <button id="btn-si">Sí mamor</button>
+    <button id="btn-no">Ño</button>
+  </div>
+</div>
+
+<div id="gift-gallery">
+  <button style="position:absolute;top:20px;right:20px;font-size:2em;background:none;border:none;color:#fff;cursor:pointer; z-index:3001;" onclick="hideGifts()">×</button>
+  <div id="gallery-scroll-view"></div>
+</div>
+
+<button id="back-to-cards-btn" class="ui-element" onclick="returnToCards()">❮ Volver a las cartas</button>
+<button id="open-gifts-btn" class="ui-element" style="display:none;">🎁<span id="notification-badge" style="display:none;">0</span></button>
+
+<div id="mini-player" class="ui-element" onclick="openMusicPlayer()">
+  <div class="mp-art" id="mp-art"></div>
+  <div class="mp-info">
+    <div class="mp-title" id="mp-title">Reproductor</div>
+    <div class="mp-artist" id="mp-artist">Toca para abrir</div>
+  </div>
+  <div class="mp-controls">
+    <button class="mp-btn" onclick="event.stopPropagation(); prevSong()"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
+    <button class="mp-btn" onclick="event.stopPropagation(); togglePlayPlayer()" id="mp-play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+    <button class="mp-btn" onclick="event.stopPropagation(); nextSong()"><svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button>
+  </div>
+</div>
+
+<div id="music-player-overlay">
+  <div class="player-bg" id="player-bg"></div>
+  <div class="swipe-area" onclick="closeMusicPlayer()"></div>
+  <div class="swipe-indicator" onclick="closeMusicPlayer()"></div>
+  
+  <button class="list-btn" onclick="togglePlaylistView()"><svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg></button>
+  <div class="player-content">
+    <div class="art-wrapper">
+        <div class="album-art" id="player-art" style="background-color:#333;"></div>
+        <div class="lyrics-overlay" id="lyrics-overlay">
+            <div class="lyrics-header">
+                <div class="lang-toggle">
+                    <div class="lang-option active" id="opt-original" onclick="setLyricsMode('original')">Original</div>
+                    <div class="lang-option" id="opt-translate" onclick="setLyricsMode('translate')">Traducción</div>
+                </div>
+            </div>
+            <div class="lyrics-text" id="lyrics-text"></div>
+        </div>
+    </div>
+    
+    <div class="song-info"><h2 id="player-title">Título</h2><h3 id="player-artist">Artista</h3></div>
+    <div class="progress-area"><div class="progress-bar" onclick="seekSong(event)"><div class="progress-fill" id="progress-fill"></div></div><div class="time-stamps"><span id="current-time">0:00</span><span id="total-duration">0:00</span></div></div>
+    <div class="controls">
+      <button class="btn-control" onclick="prevSong()"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
+      <button class="btn-control btn-play" onclick="togglePlayPlayer()" id="btn-play-icon"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+      <button class="btn-control" onclick="nextSong()"><svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button>
+    </div>
+    
+    <div style="display:flex; justify-content:center; gap:15px; width:100%; margin-top:25px;">
+        <button class="btn-glass" style="padding: 10px 24px; font-size: 0.95em; border-radius: 25px;" onclick="toggleLyrics()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+            Letra
+        </button>
+    </div>
+    
+    <button class="return-cards-btn" onclick="returnToCardsFromMusic()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+        Vuelve a leerlas
+    </button>
+  </div>
+  <div id="playlist-view">
+    <div class="playlist-header">
+        <div style="display:flex;justify-content:space-between;align-items:center;"><h3>Lista de canciones</h3><button onclick="togglePlaylistView()" style="background:none;border:none;color:#aaa;font-size:1.5em;">×</button></div>
+        <div class="playlist-desc">Esta playlist nos acompañará siempre ❤️</div>
+    </div>
+    <div id="playlist-items-container"></div>
+  </div>
+</div>
+
+
+<audio id="background-music" loop preload="auto"><source src="assets/musica.mp3" type="audio/mpeg"></audio>
+<audio id="playlist-audio" preload="auto"></audio>
+
+<div id="music-toggle" class="ui-element"><svg id="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><svg id="icon-pause" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg></div>
+<div id="zen-toggle" class="ui-element">👁️</div>
+
+<div id="valentine-book" class="centered" style="display: none;">
+    
+    <div id="p1" class="paper">
+        <div class="front">
+            <div id="f1" class="front-content">
+                <h1 class="book-valentine-text">Mi Valentín</h1>
+                <div class="book-decoration" style="font-size:3em;">❦</div>
+            </div>
+        </div>
+        <div class="back">
+            <div id="b1" class="back-content">
+                <h2 style="font-family:'Pacifico'; color:#30D5C8; font-size:2em; margin-bottom:20px;">Para Ela</h2>
+                <p>
+                    Feliz soy por tenerte, reviviste en mí esa chispa que había desaparecido hace años. Por usted aprendí a amar mucho más el <span class="special-word">arte</span>, volver a amar escribir, y amo aún más poder hacerlo para ti.
+                </p>
+                <p style="font-size:0.9em; margin-top:15px; opacity:0.8;">(Sigue leyendo...)</p>
+                <div class="page-number">I</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="p2" class="paper">
+        <div class="front">
+            <div id="f2" class="front-content">
+                <p>
+                    Me inspiraste a más cosas, tantas cosas... Siento que amo mucho más la <span class="special-word">música</span> por ti, mi futuro lo veo más claro que una playa virgen desde que te conocí, y ahí siempre estás tú.
+                </p>
+                <br>
+                <p>
+                    Quiero ser tu hombre, el hombre que te sostenga siempre. Aunque el suelo esté resbaloso nunca te dejaré caer, estaré para ti todo lo que pueda.
+                </p>
+                <div class="page-number">II</div>
+            </div>
+        </div>
+        <div class="back">
+            <div id="b2" class="back-content">
+                <p>
+                    Sé que en los días donde el suelo se vuelva incierto y la duda aceche, mi mano buscará la tuya no por costumbre, sino porque también eres la <span class="special-word">firmeza</span> que me mantiene refugiado.
+                </p>
+                <br>
+                <p>
+                    Te vislumbro como las <span class="special-word">raíces</span> que me sostienen, esas raíces que rompen todo lo que esté a mi alrededor solo para protegerme.
+                </p>
+                <div class="page-number">III</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="p3" class="paper">
+        <div class="front">
+            <div id="f3" class="front-content">
+                <p>
+                    Tus muros, esos que forjaste con independencia y silencio, no serán derribados, sino <span class="special-word">habitados</span> por mi ser.
+                </p>
+                <br>
+                <p>
+                    Desde un principio sé que he sido ese <span class="special-word">arrebol</span> cálido que se asomaba y acariciaba tu alma hasta que finalmente entré y pude abrazarte, seré el mejor, solo para usted, para mi reina.
+                </p>
+                <div class="page-number">IV</div>
+            </div>
+        </div>
+        <div class="back">
+            <div id="b3" class="back-content">
+                <p>
+                    No es necesario que dependas de mí porque eres <span class="special-word">maravillosa</span>, pero sí anhelo que me <span class="special-word">elijas</span>, yo estaré siempre dispuesto a entregar todo de mí por usted.
+                </p>
+                <br>
+                <p>
+                    Lo nuestro será sempiterno, algo más que un simple significado, hoy tenemos la base, armemos nuestro castillo.
+                </p>
+                <div class="page-number">V</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="p4" class="paper">
+        <div class="front">
+            <div id="f4" class="front-content">
+                <p>
+                    Fuimos una <span class="special-word">epifanía</span> mutua que no ha dejado de crecer, nos dimos cuenta que somos del uno para el otro, ansío que sea así para siempre y que cuando lleguemos a viejitos, podamos decir que fue lo mejor que nos pudo pasar, un sempiterno real.
+                </p>
+                <div class="page-number">VI</div>
+            </div>
+        </div>
+        <div class="back">
+            <div id="b4" class="back-content">
+                <p>
+                    Estoy tranquilo porque no necesito estar presente para caminar a tu lado; me buscas en la multitud y me encuentras en el reflejo de las personas,
+                </p>
+                <br>
+                <p>
+                    porque mi esencia ya se entrelazó con la <span class="special-word">lealtad</span> de tu alma, el calor de tu piel y el aliento que suspira las melodías de tu flauta.
+                </p>
+                <div class="page-number">VII</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="p5" class="paper">
+        <div class="front">
+            <div id="f5" class="front-content">
+                <p>
+                    Mi ausencia es solo física, porque todo de ti te lo entrego con tanto amor, que sé que lo sientes cerca.
+                </p>
+                <br>
+                <p>
+                    Que el tiempo sea impaciente y el mundo se desmorone, porque mi promesa es esperarte más allá de la orquesta que está en nuestros corazones.
+                </p>
+                <div class="page-number">VIII</div>
+            </div>
+        </div>
+        <div class="back">
+            <div id="b5" class="back-content">
+                <p>
+                    Porque eres mi <span class="special-word">serendipia</span>, y es el tesoro más grande que podré tener, habrán más tesoros, entre esos nuestros hijos, pero usted será el tesoro más importante por la compañía y amor que me brindará.
+                </p>
+                <div class="page-number">IX</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="p6" class="paper">
+        <div class="front">
+            <div id="f6" class="front-content">
+                <p>
+                    Ni Oppenheimer podría destruir nuestro mundo, porque nuestro amor es más fuerte que una reacción nuclear; En un mundo de odio y furia, nosotros seremos ese <span class="special-word">brillo</span> que hará brillar el resto.
+                </p>
+                <br>
+                <p>
+                    Estas flores son el reflejo de nuestro <span class="special-word">futuro</span>, en ellas está el pensamiento que tuve día y noche para dártelas de alguna manera.
+                </p>
+                <div class="page-number">X</div>
+            </div>
+        </div>
+        <div class="back">
+            <div id="b6" class="back-content">
+                <p>
+                    Estas flores que hoy recibes son el arrebol físico que ya no solo acaricia tu alma, sino que puedes sostener en tus manos. Son fragmentos de mi esencia que han aprendido a florecer lejos de mi tierra para que, por un momento, dejes de buscarme en el reflejo de caras extrañas y me sientas presente en tu habitación.
+                </p>
+                <div class="page-number">XI</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="p7" class="paper">
+        <div class="front">
+            <div id="f7" class="front-content">
+                <p>
+                    Aunque sus pétalos parezcan frágiles ante el paso de un tiempo impaciente, recuerda que nacen de las <span class="special-word">raíces</span> sempiternas que nos sostienen.
+                </p>
+                <br>
+                <p>
+                    Son el resultado visible de el esfuerzo de estas; esas que no dejarán que decaigas.
+                </p>
+                <div class="page-number">XII</div>
+            </div>
+        </div>
+        <div class="back">
+            <div id="b7" class="back-content">
+                <p>
+                    Que el aroma de estas flores sea el recordatorio de que, mientras el mundo se desmorona afuera, mi promesa de esperarte es lo único que nunca se marchitará.
+                </p>
+                <div class="page-number">XIII</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="p8" class="paper">
+        <div class="front">
+            <div id="f8" class="front-content">
+                <p>
+                    Te amo mi Ela.
+                </p>
+                <p>
+                    Deja que estas flores te acompañen mientras yo acorto la distancia que nos separa.
+                </p>
+                <div class="book-decoration" style="font-size:2em; margin-top:20px;">❤</div>
+                <div class="page-number">XIV</div>
+            </div>
+        </div>
+        <div class="back">
+            <div id="b8" class="back-content">
+                <h2 style="font-family:'Pacifico'; font-size:1.5em; color:#30D5C8;">Sempiterno</h2>
+                <div class="book-decoration" style="font-size:2em;">❦</div>
+                <p style="font-size:0.8em; color:#30D5C8; margin-top:20px;">(Fin)</p>
+                
+                <div style="margin-top: 40px; border-top: 1px solid rgba(48,213,200,0.3); padding-top: 10px; width: 80%;">
+                    <p style="font-family: 'Courier New', monospace; font-size: 0.6em; color: #666; letter-spacing: 1px; margin-bottom: 2px;">
+                        HECHO CON AMOR POR RORO
+                    </p>
+                    <p style="font-family: 'Courier New', monospace; font-size: 0.6em; color: #444;">
+                        14.02.2026 • STM - ETB
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+<div id="book-overlay" onclick="cerrarLibro()"></div>
+
+<script src="js/script.js"></script>
+</body>
+</html>
